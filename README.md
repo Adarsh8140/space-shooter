@@ -1,50 +1,101 @@
-# Alien Shooter Adventure
+# 🚀 Amazon Q CLI Game Build Event - Alien Shooter Adventure
 
-A vibrant, full-screen top-down shooter game for kids where players control a cartoon spaceship to shoot aliens before they reach the bottom of the screen.
+This project was created as part of the **Amazon Q CLI Game Build Challenge**, where developers use **Amazon Q CLI** to build games using just prompts and creativity — no manual coding initially required!
 
-## Game Features
+The idea is to explore the power of AI-assisted coding by building interactive games through natural language prompts and then refining the game further using custom code, assets, and enhancements.
 
-- Responsive full-screen gameplay with animated space background
-- Kid-friendly cartoon-style graphics and sound effects
-- Player-controlled spaceship with arrow keys for movement and spacebar for shooting
-- Multiple alien types with different behaviors
-- Power-ups: Shield, Double Laser, and Speed Boost
-- Obstacles: Alien bombs and flying meteors
-- Boss aliens every 5th level
-- Progressive difficulty levels
-- High score tracking
+---
 
-## Game Controls
+# 👾 Alien Shooter Adventure
+
+A vibrant, full-screen **top-down shooter game for kids**, where players control a cartoon spaceship to shoot aliens before they reach the bottom of the screen.
+
+---
+
+## 🎮 Game Features
+
+- 🖥️ **Responsive full-screen gameplay** with animated space background
+- 🎨 **Kid-friendly cartoon-style** graphics and sound effects
+- 🛸 **Spaceship controlled** via arrow keys and spacebar
+- 👾 **Multiple alien types** with different movement patterns
+- ⚡ **Power-ups**:
+  - Shield 🛡️
+  - Double Laser 🔫🔫
+  - Speed Boost 💨
+- 💣 **Obstacles**:
+  - Alien bombs
+  - Flying meteors
+- 🧠 **Boss aliens** every 5th level for added challenge
+- ⬆️ **Progressive difficulty** with increasing levels
+- 🏆 **High score** tracking and persistence
+
+---
+
+## 🕹️ Game Controls
 
 - **Arrow Keys**: Move the spaceship left and right
-- **Spacebar**: Shoot lasers
+- **Spacebar**: Fire angled double lasers
 - **Start Button**: Begin the game
 - **Play Again Button**: Restart after game over
 
-## UI Layout
+---
 
-- **Left 70%**: Main gameplay area
-- **Right 30%**: Side panel with:
-  - Score counter
-  - Life bar (3 hearts)
-  - Power-up inventory
-  - Upcoming alien preview
-  - Tip box with helpful hints
+## 🧩 UI Layout
 
-## How to Play
+| Area          | Purpose                       |
+| ------------- | ----------------------------- |
+| **Left 70%**  | Main gameplay screen (Canvas) |
+| **Right 30%** | Side panel with:              |
+|               | - Score counter 🧮            |
+|               | - Life bar (3 hearts) ❤️❤️❤️  |
+|               | - Power-up inventory ✨       |
+|               | - Upcoming alien preview 🛸   |
+|               | - Helpful gameplay tips 💡    |
 
-1. Open `index.html` in a web browser
-2. Click "Start Game" on the welcome screen
-3. Use arrow keys to move and spacebar to shoot
-4. Avoid obstacles and collect power-ups
-5. Destroy aliens before they reach the bottom
-6. Try to achieve the highest score!
+---
 
-## Development
+## 📘 How to Play
 
-This game is built using HTML5, CSS3, and JavaScript with Canvas for rendering.
+1. Open `index.html` in a modern web browser
+2. Click **"Start Game"** on the welcome screen
+3. Use arrow keys to move the spaceship
+4. Press **spacebar** to shoot angled lasers
+5. Avoid obstacles and **collect power-ups**
+6. Destroy aliens before they reach the bottom
+7. Try to beat your **high score**! 🔥
 
-To add new features or modify the game:
-- Edit `game.js` for game logic
-- Edit `styles.css` for visual styling
-- Edit `index.html` for structure changes
+---
+
+## 🛠️ Development Details
+
+This game is developed using:
+
+- **HTML5** – Markup and structure
+- **CSS3** – Styling and layout
+- **JavaScript** – Game logic (Canvas-based rendering)
+
+### Key Files:
+
+- `index.html` – Game layout and structure
+- `styles.css` – Game styling and layout design
+- `game.js` – Main game logic and features
+- `assets/` – Game images, sounds, and music
+
+---
+
+## 🧠 Future Ideas (Optional)
+
+- Add localStorage high score saving
+- Boss fight animations
+- More dynamic sound effects and level music
+- Pause/resume functionality
+- Mobile responsive controls
+
+---
+
+## 📌 Built For
+
+🏆 **Amazon Q CLI Game Build Challenge**  
+🧑‍🚀 Pushed via GitHub and playable online via GitHub Pages
+
+---

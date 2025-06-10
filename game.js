@@ -14,8 +14,15 @@ const game = {
     bullets: [],
     powerUps: [],
     obstacles: [],
+    explosions: [],
     player: null,
     keys: {},
+    isMobile: false,
+    touchControls: {
+        left: false,
+        right: false,
+        shoot: false
+    },
     activePowerUps: {
         shield: false,
         doubleLaser: false,
@@ -31,38 +38,237 @@ const game = {
     currentTip: 0,
     // Images
     images: {
-        background: null,
         player: null,
         aliens: [],
-        powerUps: {
-            shield: null,
-            doubleLaser: null,
-            speedBoost: null
-        },
-        obstacles: {
-            bomb: null,
-            meteor: null
-        },
-        explosion: null
+        powerUps: {},
+        obstacles: {},
+        background: null
     },
     // Sounds
     sounds: {
-        backgroundMusic: null,
         shoot: null,
         explosion: null,
         powerUp: null,
-        playerHit: null,
         gameOver: null
-    },
-    // Animation frames
-    spriteFrames: {
-        explosion: []
     }
 };
 
-// Function to start the actual game (called from the HTML startGame function)
-function gameStart() {
-    console.log("Game start function called from game.js");
+// Initialize the game
+function init() {
+    console.log("Game initializing...");
+    
+    // Check if device is mobile
+    game.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Set up canvas
+    game.canvas = document.getElementById('game-canvas');
+    if (!game.canvas) {
+        console.error("Canvas element not found!");
+        return;
+    }
+    
+    game.ctx = game.canvas.getContext('2d');
+    if (!game.ctx) {
+        console.error("Could not get canvas context!");
+        return;
+    }
+    
+    // Load high score from local storage
+    const savedHighScore = localStorage.getItem('alienShooterHighScore');
+    if (savedHighScore) {
+        game.highScore = parseInt(savedHighScore);
+        document.querySelector('#high-score span').textContent = game.highScore;
+    }
+    
+    // Set up keyboard controls
+    window.addEventListener('keydown', (e) => game.keys[e.code] = true);
+    window.addEventListener('keyup', (e) => game.keys[e.code] = false);
+    
+    // Set up touch controls
+    setupTouchControls();
+    
+    // Resize handler
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    // Load images
+    loadImages();
+    
+    // Load sounds
+    loadSounds();
+    
+    // Add button event listeners
+    document.getElementById('start-button').addEventListener('click', function() {
+        console.log('Start button clicked');
+        startGame();
+    });
+    
+    document.getElementById('play-again-button').addEventListener('click', function() {
+        console.log('Play again button clicked');
+        startGame();
+    });
+    
+    console.log("Game initialization complete");
+}
+
+// Set up touch controls for mobile
+function setupTouchControls() {
+    // Show/hide mobile controls based on device
+    const mobileControls = document.getElementById('mobile-controls');
+    if (game.isMobile) {
+        mobileControls.style.display = 'flex';
+    } else {
+        mobileControls.style.display = 'none';
+    }
+    
+    // Left button
+    const leftButton = document.getElementById('left-button');
+    leftButton.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        game.touchControls.left = true;
+    });
+    leftButton.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        game.touchControls.left = false;
+    });
+    
+    // Right button
+    const rightButton = document.getElementById('right-button');
+    rightButton.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        game.touchControls.right = true;
+    });
+    rightButton.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        game.touchControls.right = false;
+    });
+    
+    // Shoot button
+    const shootButton = document.getElementById('shoot-button');
+    shootButton.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        game.touchControls.shoot = true;
+    });
+    shootButton.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        game.touchControls.shoot = false;
+    });
+    
+    // Also add mouse events for testing on desktop
+    leftButton.addEventListener('mousedown', function() {
+        game.touchControls.left = true;
+    });
+    leftButton.addEventListener('mouseup', function() {
+        game.touchControls.left = false;
+    });
+    
+    rightButton.addEventListener('mousedown', function() {
+        game.touchControls.right = true;
+    });
+    rightButton.addEventListener('mouseup', function() {
+        game.touchControls.right = false;
+    });
+    
+    shootButton.addEventListener('mousedown', function() {
+        game.touchControls.shoot = true;
+    });
+    shootButton.addEventListener('mouseup', function() {
+        game.touchControls.shoot = false;
+    });
+}
+
+// Load game images
+function loadImages() {
+    try {
+        // Player spaceship
+        game.images.player = new Image();
+        game.images.player.src = 'assets/images/spaceship.png';
+        game.images.player.onload = () => console.log("Player image loaded");
+        game.images.player.onerror = () => console.error("Error loading player image");
+        
+        // Alien images
+        for (let i = 1; i <= 2; i++) {
+            const alienImg = new Image();
+            alienImg.src = `assets/images/alien${i}.png`;
+            alienImg.onload = () => console.log(`Alien ${i} image loaded`);
+            alienImg.onerror = () => console.error(`Error loading alien ${i} image`);
+            game.images.aliens.push(alienImg);
+        }
+        
+        // Power-up images
+        game.images.powerUps.shield = new Image();
+        game.images.powerUps.shield.src = 'assets/images/powerup_shield.png';
+        game.images.powerUps.shield.onload = () => console.log("Shield power-up image loaded");
+        
+        // Obstacle images
+        game.images.obstacles.meteor = new Image();
+        game.images.obstacles.meteor.src = 'assets/images/obstacle_meteor.png';
+        game.images.obstacles.meteor.onload = () => console.log("Meteor obstacle image loaded");
+        
+        // Explosion image
+        game.images.explosion = new Image();
+        game.images.explosion.src = 'assets/images/explosion.png';
+        game.images.explosion.onload = () => console.log("Explosion image loaded");
+        
+        console.log("Image loading initiated");
+    } catch (error) {
+        console.error("Error loading images:", error);
+    }
+}
+
+// Load game sounds
+function loadSounds() {
+    try {
+        // Get audio elements
+        game.sounds.shoot = document.getElementById('sound-shoot');
+        game.sounds.explosion = document.getElementById('sound-explosion');
+        game.sounds.powerUp = document.getElementById('sound-powerup');
+        game.sounds.gameOver = document.getElementById('sound-gameover');
+        
+        console.log("Sound loading complete");
+    } catch (error) {
+        console.error("Error loading sounds:", error);
+    }
+}
+
+// Play a sound with error handling
+function playSound(sound) {
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(error => {
+            console.error("Error playing sound:", error);
+        });
+    }
+}
+
+// Resize canvas to fit the game area
+function resizeCanvas() {
+    const gameArea = document.getElementById('game-area');
+    game.width = gameArea.clientWidth;
+    game.height = gameArea.clientHeight;
+    game.canvas.width = game.width;
+    game.canvas.height = game.height;
+    console.log(`Canvas resized to ${game.width}x${game.height}`);
+    
+    // If the game is already running, adjust player position
+    if (game.player) {
+        // Make sure player stays within bounds after resize
+        game.player.x = Math.min(game.player.x, game.width - game.player.width);
+        game.player.y = game.height - 100;
+    }
+}
+
+// Start the game
+function startGame() {
+    console.log("Starting game...");
+    
+    // Hide welcome screen, show game screen
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    
+    // Make sure canvas is properly sized after showing game screen
+    resizeCanvas();
     
     // Reset game state
     game.isRunning = true;
@@ -87,7 +293,7 @@ function gameStart() {
     
     // Create player
     game.player = {
-        x: game.width / 2,
+        x: game.width / 2 - 30,
         y: game.height - 100,
         width: 60,
         height: 60,
@@ -95,13 +301,7 @@ function gameStart() {
         color: '#00ff00'
     };
     
-    // Start background music
-    if (game.sounds.backgroundMusic) {
-        game.sounds.backgroundMusic.currentTime = 0;
-        game.sounds.backgroundMusic.play().catch(error => {
-            console.error("Error playing background music:", error);
-        });
-    }
+    console.log("Player created at", game.player.x, game.player.y);
     
     // Start game loop
     game.lastTime = performance.now();
@@ -113,76 +313,6 @@ function gameStart() {
     // Show random tip
     showRandomTip();
 }
-
-// Make gameStart function globally accessible
-window.gameStart = gameStart;
-        shoot: null,
-        explosion: null,
-        powerUp: null,
-        playerHit: null,
-        gameOver: null
-    },
-    // Animation frames
-    spriteFrames: {
-        explosion: []
-    }
-};
-
-// Initialize the game
-function init() {
-    console.log("Game initializing...");
-    // Set up screens
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const gameOverScreen = document.getElementById('game-over-screen');
-    
-    // Set up canvas
-    game.canvas = document.getElementById('game-canvas');
-    game.ctx = game.canvas.getContext('2d');
-    
-    // Load high score from local storage
-    const savedHighScore = localStorage.getItem('alienShooterHighScore');
-    if (savedHighScore) {
-        game.highScore = parseInt(savedHighScore);
-        document.querySelector('#high-score span').textContent = game.highScore;
-    }
-    
-    // Load game assets
-    loadAssets();
-    
-    // Resize handler
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    
-    // Set up keyboard controls
-    window.addEventListener('keydown', (e) => game.keys[e.code] = true);
-    window.addEventListener('keyup', (e) => game.keys[e.code] = false);
-    
-    console.log("Game initialization complete");
-}
-    
-    // Load high score from local storage
-    const savedHighScore = localStorage.getItem('alienShooterHighScore');
-    if (savedHighScore) {
-        game.highScore = parseInt(savedHighScore);
-        document.querySelector('#high-score span').textContent = game.highScore;
-    }
-    
-    // Resize handler
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-}
-
-// Resize canvas to fit the game area
-function resizeCanvas() {
-    const gameArea = document.getElementById('game-area');
-    game.width = gameArea.clientWidth;
-    game.height = gameArea.clientHeight;
-    game.canvas.width = game.width;
-    game.canvas.height = game.height;
-}
-
-// This function is now defined in the HTML file and calls gameStart()
 
 // Game loop
 function gameLoop(timestamp) {
@@ -218,26 +348,24 @@ function gameLoop(timestamp) {
 
 // Draw background
 function drawBackground() {
-    if (game.images.background && game.images.background.complete) {
-        // Draw tiled background
-        const pattern = game.ctx.createPattern(game.images.background, 'repeat');
-        game.ctx.fillStyle = pattern;
-        game.ctx.fillRect(0, 0, game.width, game.height);
-    } else {
-        // Fallback if image not loaded
-        game.ctx.fillStyle = '#000033';
-        game.ctx.fillRect(0, 0, game.width, game.height);
-        
-        // Draw stars
-        game.ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 100; i++) {
-            const x = Math.random() * game.width;
-            const y = Math.random() * game.height;
-            const size = Math.random() * 3;
-            game.ctx.beginPath();
-            game.ctx.arc(x, y, size, 0, Math.PI * 2);
-            game.ctx.fill();
-        }
+    // Make sure we have a valid context
+    if (!game.ctx) {
+        console.error("Canvas context is not available");
+        return;
+    }
+    
+    game.ctx.fillStyle = '#000033';
+    game.ctx.fillRect(0, 0, game.width, game.height);
+    
+    // Draw stars
+    game.ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 100; i++) {
+        const x = Math.random() * game.width;
+        const y = Math.random() * game.height;
+        const size = Math.random() * 3;
+        game.ctx.beginPath();
+        game.ctx.arc(x, y, size, 0, Math.PI * 2);
+        game.ctx.fill();
     }
 }
 
@@ -245,42 +373,51 @@ function drawBackground() {
 function updatePlayer(deltaTime) {
     const speedMultiplier = game.activePowerUps.speedBoost ? 1.5 : 1;
     
-    if (game.keys['ArrowLeft'] && game.player.x > 0) {
-        game.player.x -= game.player.speed * speedMultiplier;
+    // Keyboard controls
+    if (game.keys['ArrowLeft'] || game.touchControls.left) {
+        if (game.player.x > 0) {
+            game.player.x -= game.player.speed * speedMultiplier;
+        }
     }
-    if (game.keys['ArrowRight'] && game.player.x < game.width - game.player.width) {
-        game.player.x += game.player.speed * speedMultiplier;
+    if (game.keys['ArrowRight'] || game.touchControls.right) {
+        if (game.player.x < game.width - game.player.width) {
+            game.player.x += game.player.speed * speedMultiplier;
+        }
     }
     
     // Shooting
-    if (game.keys['Space']) {
+    if (game.keys['Space'] || game.touchControls.shoot) {
         shoot();
     }
 }
 
 // Draw the player
 function drawPlayer() {
-    if (game.images.player && game.images.player.complete) {
-        // Draw player image
-        game.ctx.drawImage(
-            game.images.player,
-            game.player.x,
-            game.player.y,
-            game.player.width,
-            game.player.height
-        );
-    } else {
-        // Fallback if image not loaded
-        game.ctx.fillStyle = game.player.color;
-        
-        // Draw spaceship body
-        game.ctx.beginPath();
-        game.ctx.moveTo(game.player.x + game.player.width / 2, game.player.y);
-        game.ctx.lineTo(game.player.x, game.player.y + game.player.height);
-        game.ctx.lineTo(game.player.x + game.player.width, game.player.y + game.player.height);
-        game.ctx.closePath();
-        game.ctx.fill();
+    // Make sure player exists
+    if (!game.player) {
+        console.error("Player object is not initialized");
+        return;
     }
+    
+    // Flash effect when shooting
+    if (game.player.flashEffect) {
+        game.ctx.fillStyle = '#ffffff'; // White flash
+    } else {
+        game.ctx.fillStyle = game.player.color;
+    }
+    
+    // Draw spaceship body
+    game.ctx.beginPath();
+    game.ctx.moveTo(game.player.x + game.player.width / 2, game.player.y);
+    game.ctx.lineTo(game.player.x, game.player.y + game.player.height);
+    game.ctx.lineTo(game.player.x + game.player.width, game.player.y + game.player.height);
+    game.ctx.closePath();
+    game.ctx.fill();
+    
+    // Draw laser cannons on the ship
+    game.ctx.fillStyle = '#ff3333';
+    game.ctx.fillRect(game.player.x + game.player.width * 0.3 - 2, game.player.y + 5, 4, 8);
+    game.ctx.fillRect(game.player.x + game.player.width * 0.7 - 2, game.player.y + 5, 4, 8);
     
     // Draw shield if active
     if (game.activePowerUps.shield) {
@@ -304,57 +441,79 @@ function shoot() {
     if (!game.lastShot || now - game.lastShot > 300) {
         game.lastShot = now;
         
-        // Play shoot sound
+        // Fire two bullets at outward angles
+        // Left bullet - angled toward upper-left
+        game.bullets.push({
+            x: game.player.x + game.player.width * 0.3,
+            y: game.player.y,
+            width: 5,
+            height: 15,
+            speed: 10,
+            color: '#ff00ff',
+            velocityX: -2,  // Move left as it travels up
+            velocityY: -10  // Move up
+        });
+        
+        // Right bullet - angled toward upper-right
+        game.bullets.push({
+            x: game.player.x + game.player.width * 0.7,
+            y: game.player.y,
+            width: 5,
+            height: 15,
+            speed: 10,
+            color: '#ff00ff',
+            velocityX: 2,   // Move right as it travels up
+            velocityY: -10  // Move up
+        });
+        
+        // Play shooting sound
         playSound(game.sounds.shoot);
         
-        if (game.activePowerUps.doubleLaser) {
-            // Double laser power-up
-            game.bullets.push({
-                x: game.player.x + game.player.width * 0.3,
-                y: game.player.y,
-                width: 5,
-                height: 15,
-                speed: 10,
-                color: '#ff00ff'
-            });
-            
-            game.bullets.push({
-                x: game.player.x + game.player.width * 0.7,
-                y: game.player.y,
-                width: 5,
-                height: 15,
-                speed: 10,
-                color: '#ff00ff'
-            });
-        } else {
-            // Single laser
-            game.bullets.push({
-                x: game.player.x + game.player.width / 2 - 2.5,
-                y: game.player.y,
-                width: 5,
-                height: 15,
-                speed: 10,
-                color: '#ff0000'
-            });
-        }
+        // Add a visual effect when shooting
+        createLaserEffect();
     }
+}
+
+// Create a visual effect when shooting
+function createLaserEffect() {
+    // Flash effect on the player
+    game.player.flashEffect = true;
+    setTimeout(() => {
+        game.player.flashEffect = false;
+    }, 100);
 }
 
 // Update bullets
 function updateBullets(deltaTime) {
     for (let i = game.bullets.length - 1; i >= 0; i--) {
         const bullet = game.bullets[i];
-        bullet.y -= bullet.speed;
+        
+        // Move bullet according to its velocity
+        bullet.x += bullet.velocityX;
+        bullet.y += bullet.velocityY;
         
         // Remove bullets that go off screen
-        if (bullet.y + bullet.height < 0) {
+        if (bullet.y + bullet.height < 0 || 
+            bullet.x < 0 || 
+            bullet.x > game.width) {
             game.bullets.splice(i, 1);
             continue;
         }
         
-        // Draw bullet
+        // Draw bullet with a glowing effect
+        game.ctx.save();
+        game.ctx.shadowBlur = 10;
+        game.ctx.shadowColor = bullet.color;
         game.ctx.fillStyle = bullet.color;
-        game.ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+        
+        // Rotate the bullet based on its trajectory
+        const angle = Math.atan2(bullet.velocityY, bullet.velocityX);
+        game.ctx.translate(bullet.x + bullet.width/2, bullet.y + bullet.height/2);
+        game.ctx.rotate(angle);
+        game.ctx.fillRect(-bullet.width/2, -bullet.height/2, bullet.width, bullet.height);
+        
+        game.ctx.restore();
+        game.ctx.shadowBlur = 0; // Reset shadow for other elements
     }
 }
 
@@ -372,7 +531,6 @@ function spawnAliens() {
             width: 50,
             height: 50,
             speed: 1 + game.level * 0.2,
-            health: alienType + 1,
             type: alienType,
             color: ['#00ff00', '#ffff00', '#ff00ff'][alienType]
         };
@@ -415,46 +573,34 @@ function updateAliens(deltaTime) {
 
 // Draw alien
 function drawAlien(alien) {
-    if (game.images.aliens[alien.type] && game.images.aliens[alien.type].complete) {
-        // Draw alien image
-        game.ctx.drawImage(
-            game.images.aliens[alien.type],
-            alien.x,
-            alien.y,
-            alien.width,
-            alien.height
-        );
-    } else {
-        // Fallback if image not loaded
-        game.ctx.fillStyle = alien.color;
-        
-        // Draw alien body
-        game.ctx.beginPath();
-        game.ctx.arc(
-            alien.x + alien.width / 2,
-            alien.y + alien.height / 2,
-            alien.width / 2,
-            0, Math.PI * 2
-        );
-        game.ctx.fill();
-        
-        // Draw alien eyes
-        game.ctx.fillStyle = '#000000';
-        game.ctx.beginPath();
-        game.ctx.arc(
-            alien.x + alien.width / 3,
-            alien.y + alien.height / 3,
-            alien.width / 10,
-            0, Math.PI * 2
-        );
-        game.ctx.arc(
-            alien.x + alien.width * 2/3,
-            alien.y + alien.height / 3,
-            alien.width / 10,
-            0, Math.PI * 2
-        );
-        game.ctx.fill();
-    }
+    game.ctx.fillStyle = alien.color;
+    
+    // Draw alien body
+    game.ctx.beginPath();
+    game.ctx.arc(
+        alien.x + alien.width / 2,
+        alien.y + alien.height / 2,
+        alien.width / 2,
+        0, Math.PI * 2
+    );
+    game.ctx.fill();
+    
+    // Draw alien eyes
+    game.ctx.fillStyle = '#000000';
+    game.ctx.beginPath();
+    game.ctx.arc(
+        alien.x + alien.width / 3,
+        alien.y + alien.height / 3,
+        alien.width / 10,
+        0, Math.PI * 2
+    );
+    game.ctx.arc(
+        alien.x + alien.width * 2/3,
+        alien.y + alien.height / 3,
+        alien.width / 10,
+        0, Math.PI * 2
+    );
+    game.ctx.fill();
 }
 
 // Spawn power-up
@@ -488,21 +634,8 @@ function updatePowerUps(deltaTime) {
         }
         
         // Draw power-up
-        const powerUpImage = game.images.powerUps[powerUp.type];
-        if (powerUpImage && powerUpImage.complete) {
-            // Draw power-up image
-            game.ctx.drawImage(
-                powerUpImage,
-                powerUp.x,
-                powerUp.y,
-                powerUp.width,
-                powerUp.height
-            );
-        } else {
-            // Fallback if image not loaded
-            game.ctx.font = '24px Arial';
-            game.ctx.fillText(powerUp.emoji, powerUp.x, powerUp.y);
-        }
+        game.ctx.font = '24px Arial';
+        game.ctx.fillText(powerUp.emoji, powerUp.x, powerUp.y);
     }
 }
 
@@ -537,21 +670,59 @@ function updateObstacles(deltaTime) {
         }
         
         // Draw obstacle
-        const obstacleImage = game.images.obstacles[obstacle.type];
-        if (obstacleImage && obstacleImage.complete) {
-            // Draw obstacle image
-            game.ctx.drawImage(
-                obstacleImage,
-                obstacle.x,
-                obstacle.y,
-                obstacle.width,
-                obstacle.height
-            );
-        } else {
-            // Fallback if image not loaded
-            game.ctx.font = '32px Arial';
-            game.ctx.fillText(obstacle.emoji, obstacle.x, obstacle.y);
+        game.ctx.font = '32px Arial';
+        game.ctx.fillText(obstacle.emoji, obstacle.x, obstacle.y);
+    }
+}
+
+// Create explosion effect
+function createExplosion(x, y) {
+    game.explosions = game.explosions || [];
+    
+    game.explosions.push({
+        x: x - 32,
+        y: y - 32,
+        width: 64,
+        height: 64,
+        frame: 0,
+        maxFrames: 10,
+        lastFrameTime: performance.now(),
+        frameDelay: 50
+    });
+}
+
+// Update and draw explosions
+function updateExplosions(deltaTime) {
+    if (!game.explosions) return;
+    
+    const now = performance.now();
+    
+    for (let i = game.explosions.length - 1; i >= 0; i--) {
+        const explosion = game.explosions[i];
+        
+        // Update frame if enough time has passed
+        if (now - explosion.lastFrameTime > explosion.frameDelay) {
+            explosion.frame++;
+            explosion.lastFrameTime = now;
+            
+            // Remove explosion if animation is complete
+            if (explosion.frame >= explosion.maxFrames) {
+                game.explosions.splice(i, 1);
+                continue;
+            }
         }
+        
+        // Draw explosion
+        const radius = explosion.width / 2 * (1 - explosion.frame / explosion.maxFrames);
+        game.ctx.fillStyle = '#ff9900';
+        game.ctx.beginPath();
+        game.ctx.arc(
+            explosion.x + explosion.width / 2,
+            explosion.y + explosion.height / 2,
+            radius,
+            0, Math.PI * 2
+        );
+        game.ctx.fill();
     }
 }
 
@@ -568,28 +739,24 @@ function checkCollisions() {
                 // Remove bullet
                 game.bullets.splice(i, 1);
                 
-                // Reduce alien health
-                alien.health--;
+                // One-hit kill - always destroy alien
+                // Create explosion effect
+                createExplosion(alien.x + alien.width/2, alien.y + alien.height/2);
                 
-                // Remove alien if health is 0
-                if (alien.health <= 0) {
-                    // Create explosion effect
-                    createExplosion(alien.x + alien.width/2, alien.y + alien.height/2);
-                    
-                    // Play explosion sound
-                    playSound(game.sounds.explosion);
-                    
-                    game.aliens.splice(j, 1);
-                    
-                    // Increase score
-                    game.score += (alien.type + 1) * 10;
-                    document.getElementById('score').textContent = game.score;
-                    
-                    // Check for level up
-                    if (game.score >= game.level * 100) {
-                        game.level++;
-                        showRandomTip();
-                    }
+                // Play explosion sound
+                playSound(game.sounds.explosion);
+                
+                // Remove alien
+                game.aliens.splice(j, 1);
+                
+                // Increase score
+                game.score += (alien.type + 1) * 10;
+                document.getElementById('score').textContent = game.score;
+                
+                // Check for level up
+                if (game.score >= game.level * 100) {
+                    game.level++;
+                    showRandomTip();
                 }
                 
                 break;
@@ -608,8 +775,6 @@ function checkCollisions() {
             game.aliens.splice(i, 1);
             
             if (!game.activePowerUps.shield) {
-                // Play hit sound
-                playSound(game.sounds.playerHit);
                 loseLife();
             }
         }
@@ -621,9 +786,6 @@ function checkCollisions() {
         
         if (checkCollision(game.player, powerUp)) {
             game.powerUps.splice(i, 1);
-            
-            // Play power-up sound
-            playSound(game.sounds.powerUp);
             
             // Activate power-up
             activatePowerUp(powerUp.type);
@@ -641,8 +803,6 @@ function checkCollisions() {
             game.obstacles.splice(i, 1);
             
             if (!game.activePowerUps.shield) {
-                // Play hit sound
-                playSound(game.sounds.playerHit);
                 loseLife();
             }
         }
@@ -661,6 +821,9 @@ function checkCollision(obj1, obj2) {
 function activatePowerUp(type) {
     game.activePowerUps[type] = true;
     updatePowerUps();
+    
+    // Play power-up sound
+    playSound(game.sounds.powerUp);
     
     // Power-up duration
     setTimeout(() => {
@@ -709,11 +872,6 @@ function showRandomTip() {
 function gameOver() {
     game.isRunning = false;
     
-    // Stop background music
-    if (game.sounds.backgroundMusic) {
-        game.sounds.backgroundMusic.pause();
-    }
-    
     // Play game over sound
     playSound(game.sounds.gameOver);
     
@@ -734,170 +892,3 @@ function gameOver() {
 
 // Initialize the game when the page loads
 window.addEventListener('load', init);
-// Load game assets (images and sounds)
-function loadAssets() {
-    console.log("Loading game assets...");
-    
-    // Load images
-    loadImages();
-    
-    // Load sounds
-    loadSounds();
-}
-
-// Load game images
-function loadImages() {
-    // Background
-    game.images.background = new Image();
-    game.images.background.src = 'assets/images/background.png';
-    game.images.background.onload = () => console.log("Background image loaded");
-    
-    // Player spaceship
-    game.images.player = new Image();
-    game.images.player.src = 'assets/images/spaceship.png';
-    game.images.player.onload = () => console.log("Player image loaded");
-    
-    // Aliens
-    for (let i = 1; i <= 3; i++) {
-        const alienImg = new Image();
-        alienImg.src = `assets/images/alien${i}.png`;
-        alienImg.onload = () => console.log(`Alien ${i} image loaded`);
-        game.images.aliens.push(alienImg);
-    }
-    
-    // Power-ups
-    game.images.powerUps.shield = new Image();
-    game.images.powerUps.shield.src = 'assets/images/powerup_shield.png';
-    game.images.powerUps.shield.onload = () => console.log("Shield power-up image loaded");
-    
-    game.images.powerUps.doubleLaser = new Image();
-    game.images.powerUps.doubleLaser.src = 'assets/images/powerup_laser.png';
-    game.images.powerUps.doubleLaser.onload = () => console.log("Double laser power-up image loaded");
-    
-    game.images.powerUps.speedBoost = new Image();
-    game.images.powerUps.speedBoost.src = 'assets/images/powerup_speed.png';
-    game.images.powerUps.speedBoost.onload = () => console.log("Speed boost power-up image loaded");
-    
-    // Obstacles
-    game.images.obstacles.bomb = new Image();
-    game.images.obstacles.bomb.src = 'assets/images/obstacle_bomb.png';
-    game.images.obstacles.bomb.onload = () => console.log("Bomb obstacle image loaded");
-    
-    game.images.obstacles.meteor = new Image();
-    game.images.obstacles.meteor.src = 'assets/images/obstacle_meteor.png';
-    game.images.obstacles.meteor.onload = () => console.log("Meteor obstacle image loaded");
-    
-    // Explosion
-    game.images.explosion = new Image();
-    game.images.explosion.src = 'assets/images/explosion.png';
-    game.images.explosion.onload = () => {
-        console.log("Explosion sprite sheet loaded");
-        // Create explosion animation frames
-        const frameWidth = 64; // Assuming explosion sprite sheet has 64x64 frames
-        const frameHeight = 64;
-        const framesPerRow = 5; // Assuming 5 frames per row in the sprite sheet
-        const totalFrames = 25; // Assuming 25 total frames
-        
-        for (let i = 0; i < totalFrames; i++) {
-            const row = Math.floor(i / framesPerRow);
-            const col = i % framesPerRow;
-            
-            game.spriteFrames.explosion.push({
-                x: col * frameWidth,
-                y: row * frameHeight,
-                width: frameWidth,
-                height: frameHeight
-            });
-        }
-    };
-}
-
-// Load game sounds
-function loadSounds() {
-    // Background music
-    game.sounds.backgroundMusic = new Audio('assets/sounds/background_music.mp3');
-    game.sounds.backgroundMusic.loop = true;
-    game.sounds.backgroundMusic.volume = 0.5;
-    
-    // Sound effects
-    game.sounds.shoot = new Audio('assets/sounds/shoot.wav');
-    game.sounds.explosion = new Audio('assets/sounds/explosion.wav');
-    game.sounds.powerUp = new Audio('assets/sounds/powerup.wav');
-    game.sounds.playerHit = new Audio('assets/sounds/player_hit.wav');
-    game.sounds.gameOver = new Audio('assets/sounds/game_over.wav');
-}
-
-// Play sound with error handling
-function playSound(sound) {
-    if (sound) {
-        sound.currentTime = 0;
-        sound.play().catch(error => {
-            console.error("Error playing sound:", error);
-        });
-    }
-}
-// Create explosion effect
-function createExplosion(x, y) {
-    game.explosions = game.explosions || [];
-    
-    game.explosions.push({
-        x: x - 32, // Center explosion (assuming 64x64 explosion sprite)
-        y: y - 32,
-        width: 64,
-        height: 64,
-        frame: 0,
-        maxFrames: game.spriteFrames.explosion.length,
-        lastFrameTime: performance.now(),
-        frameDelay: 50 // milliseconds between frames
-    });
-}
-
-// Update and draw explosions
-function updateExplosions(deltaTime) {
-    if (!game.explosions) return;
-    
-    const now = performance.now();
-    
-    for (let i = game.explosions.length - 1; i >= 0; i--) {
-        const explosion = game.explosions[i];
-        
-        // Update frame if enough time has passed
-        if (now - explosion.lastFrameTime > explosion.frameDelay) {
-            explosion.frame++;
-            explosion.lastFrameTime = now;
-            
-            // Remove explosion if animation is complete
-            if (explosion.frame >= explosion.maxFrames) {
-                game.explosions.splice(i, 1);
-                continue;
-            }
-        }
-        
-        // Draw explosion frame
-        if (game.images.explosion && game.images.explosion.complete && game.spriteFrames.explosion.length > 0) {
-            const frame = game.spriteFrames.explosion[explosion.frame];
-            
-            game.ctx.drawImage(
-                game.images.explosion,
-                frame.x, frame.y, frame.width, frame.height,
-                explosion.x, explosion.y, explosion.width, explosion.height
-            );
-        } else {
-            // Fallback if image not loaded
-            game.ctx.fillStyle = '#ff9900';
-            game.ctx.beginPath();
-            game.ctx.arc(
-                explosion.x + explosion.width / 2,
-                explosion.y + explosion.height / 2,
-                explosion.width / 2 * (1 - explosion.frame / explosion.maxFrames),
-                0, Math.PI * 2
-            );
-            game.ctx.fill();
-        }
-    }
-}
-// Initialize the game when the page loads
-window.addEventListener('load', init);
-
-// Make sure gameStart is available globally
-window.gameStart = gameStart;

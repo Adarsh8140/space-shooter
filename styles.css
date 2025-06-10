@@ -31,6 +31,8 @@ body {
     background-color: #000033;
     z-index: 10;
     pointer-events: auto;
+    padding: 20px;
+    text-align: center;
 }
 
 #welcome-screen button {
@@ -38,7 +40,7 @@ body {
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Welcome Screen */
@@ -87,6 +89,7 @@ button:hover {
     width: 70%;
     height: 100%;
     position: relative;
+    background-color: #000033;
 }
 
 #game-canvas {
@@ -172,6 +175,8 @@ button:hover {
 #game-over-screen {
     background-color: #000033;
     z-index: 10;
+    padding: 20px;
+    text-align: center;
 }
 
 #game-over-screen h1 {
@@ -189,4 +194,85 @@ button:hover {
 
 #play-again-button {
     margin-top: 2rem;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    display: none;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+}
+
+.control-button {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    color: white;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#shoot-button {
+    background-color: rgba(255, 0, 0, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #welcome-screen h1 {
+        font-size: 2.5rem;
+    }
+    
+    button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1.2rem;
+    }
+    
+    #game-screen {
+        flex-direction: column;
+    }
+    
+    #game-area {
+        width: 100%;
+        height: 70%;
+    }
+    
+    #side-panel {
+        width: 100%;
+        height: 30%;
+        border-left: none;
+        border-top: 3px solid #00ffff;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        overflow-y: auto;
+    }
+    
+    .panel-section {
+        flex: 1 1 45%;
+        min-width: 150px;
+        padding: 10px;
+        margin: 5px;
+    }
+    
+    #mobile-controls {
+        display: flex;
+    }
+    
+    #game-over-screen h1 {
+        font-size: 2.5rem;
+    }
+    
+    #final-score, #high-score {
+        font-size: 1.5rem;
+    }
 }
