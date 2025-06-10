@@ -1,0 +1,16 @@
+This directory will contain game assets like:
+- Background images
+- Sprite sheets
+- Sound effects
+- Music files
+
+For a complete game, you would need to add:
+1. background.png - A space background with stars
+2. spaceship.png - Player's spaceship sprite
+3. alien1.png, alien2.png, alien3.png - Different alien sprites
+4. explosion.png - Explosion animation sprite sheet
+5. laser.png - Laser beam sprite
+6. powerup_shield.png, powerup_laser.png, powerup_speed.png - Power-up sprites
+7. obstacle_bomb.png, obstacle_meteor.png - Obstacle sprites
+8. shoot.wav, explosion.wav, powerup.wav - Sound effects
+9. background_music.mp3 - Background music loop
