@@ -1,6 +1,6 @@
 # 🚀 Amazon Q CLI Game Build Event - Alien Shooter Adventure
 
-This project was created as part of the Amazon Q CLI Game Build Challenge, where developers use Amazon Q CLI to build games using just prompts and creativity — no manual coding initially required!
+This project was created as part of the Amazon Q CLI Game Build Challenge, where developers use Amazon Q CLI to build games using creativity.
 
 The idea is to explore the power of AI-assisted coding by building interactive games through natural language prompts and then refining the game further using custom code, assets, and enhancements.
 
